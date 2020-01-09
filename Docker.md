@@ -117,7 +117,7 @@ docker build -t dockerid/repo:version
 docker run dockerid/redis
 ```
 
-### Simpleweb
+### Simple Node
 
 ```Dockerfile
 FROM node:13.6-alpine3.11
@@ -138,4 +138,124 @@ docker run -p 80:8080 silentmenu/simpleweb
 
 * You cannot expose ports in Dockerfile. It's strictly a runtime thing.
 * In dockertoolbox, use IP in browser instead of localhost
+
+## Docker with Redis
+
+### Docker Compose
+
+* Separate CLI tool that gets installed with Docker
+* Used to start up multiple containers at the same time
+* Automates some of the long-winded arguments we were passing to docker run
+* File name is docker-compose.yml
+* Docker automatically sets up network between multiple containers defined in a docker compose file
+
+```javascript
+docker-compose up
+
+// rebuild image of container defined in docker compose file
+docker build . 
+docker run myimage
+=> docker-compose up --build
+
+// start group of containers in background
+docker-compose up -d
+
+// stop all containers of the compose
+docker-compose down
+
+// list all running containers of the current compose file
+docker-compose ps
+```
+
+### Handling Crashes
+
+Exit codes 0 - We exited and everything is OK
+
+Exit codes 1,2,3 etc. - We exited because something went wrong
+
+####  Restart Policies
+
+* "no" - Never attempt to restart this container if it stops or crashes. mind the quotes.
+* always - If this container stops for any reason, always restart it
+* on-failure - Only restart the container if it stops with an error code
+* unless-stopped - Always restart it unless we the developers forcibly stop it
+
+We normally use always when our container is a web server and we want to ensure it is always available to customers. on-failure is generally used for worker processes, like processing some file and exiting it.
+
+
+
+```dockerfile
+# dockerfile
+
+FROM node:alpine
+
+WORKDIR '/app'
+
+COPY package.json package-lock.json* ./
+RUN npm install
+COPY . .
+
+CMD ["npm", "start"]
+```
+
+
+
+```dockerfile
+# docker-compose
+version: "3"
+
+services:
+  redis-server:
+    image: "redis"
+
+  node-app:
+    restart: always
+    build: .
+    ports:
+      - "4001:8081"
+```
+
+```javascript
+# index.js
+const express = require("express");
+const redis = require("redis");
+const process = require("process");
+
+const app = express();
+const client = redis.createClient({
+  host: "redis-server",
+  port: 6379
+});
+client.set("visits", 0);
+
+app.get("/", (req, res) => {
+  client.get("visits", (err, visits) => {
+    res.send("Number of visits: " + visits);
+    client.set("visits", parseInt(visits) + 1);
+  });
+});
+
+app.get("/crash", (req, res) => {
+  process.exit(0);
+});
+
+app.listen(8081, () => {
+  console.log("app listening on port 8081");
+});
+
+```
+
+```json
+#package.json
+
+{
+  "dependencies": {
+    "express": "*",
+    "redis": "2.8.0"
+  },
+  "scripts": {
+    "start": "node index.js"
+  }
+}
+```
 
