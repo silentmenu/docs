@@ -69,3 +69,30 @@ docker stop <container id>
 docker kill <container id>
 ```
 
+```javascript
+// additional commands inside container
+docker exec -it <container id> <command>
+// -i = allow us to input to container
+// -t = show text pretty
+    
+// get shell access to the container
+docker exec -it <container id> sh
+docker run -it busybox sh
+```
+
+## Images
+
+1. Create Dockerfile, a plain text file with a couple of configuration options in it. It will define how the container behaves, what files or programs does it contain and what process will start when it runs.
+2. Use Docker Client and sent to Docker Server (```docker build .```)
+3. Docker Server will create the container from the image.
+
+### Creating Dockerfile
+
+1. Specify a base image
+2. Run some commands to install additional programs
+3. Specifiy a command to run on container startup
+
+```dockerfile
+
+```
+
