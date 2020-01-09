@@ -15,7 +15,7 @@
 
 **Docker Client** - Docker CLI. Tool that we use to issue commands
 
-**Docker Server** - Docker Daemon. Tool responsible for creating images, running containers etc.
+**Docker Server** - Docker Daemon. Tool responsible for creating images, running containers etc..
 
 ```javascript
 docker version
@@ -90,9 +90,52 @@ docker run -it busybox sh
 
 1. Specify a base image
 2. Run some commands to install additional programs
-3. Specifiy a command to run on container startup
+3. Specify a command to run on container startup
 
 ```dockerfile
+# Use an existing Docker image as base
+FROM alpine
+
+# Download and install a dependency
+RUN apk add --update redis
+
+# Tell the image what to do when the container starts
+CMD ["redis-server"]
+```
 
 ```
+docker build .
+docker run <container id>
+```
+
+Docker will try to use cache as much as possible when building image.
+
+#### Tagging an Image
+
+```javascript
+docker build -t dockerid/repo:version
+docker run dockerid/redis
+```
+
+### Simpleweb
+
+```Dockerfile
+FROM node:13.6-alpine3.11
+
+WORKDIR /usr/app
+
+COPY ./ ./
+
+RUN npm install
+
+CMD ["npm", "start"]
+```
+
+```
+docker build -t silentmenu/simpleweb .
+docker run -p 80:8080 silentmenu/simpleweb
+```
+
+* You cannot expose ports in Dockerfile. It's strictly a runtime thing.
+* In dockertoolbox, use IP in browser instead of localhost
 
