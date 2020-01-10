@@ -259,3 +259,78 @@ app.listen(8081, () => {
 }
 ```
 
+## React
+
+To run a custom docker file: ```docker build -f Dockerfile.dev .```
+
+### Docker Volumes
+
+```
+docker run -p 3000:3000 -v /app/node_modules -v $(pwd):/app <image_id>
+```
+
+* -v $(pwd):/app => map /app in the container to the current folder
+* -v /app/node_modules => dont map the node_modules folder in the container though
+
+You can run test on an existing container ```docker exec -it <container_id> npm run test```
+
+When we docker attach, we always attach is to the primary process.
+
+```dockerfile
+# Dockerfile.dev
+
+FROM node:alpine
+
+WORKDIR /app
+
+COPY package.json .
+RUN npm install
+
+COPY . .
+CMD ["npm", "run", "start"]	
+```
+
+```dockerfile
+# docker-compose.yml
+
+version: "3"
+
+services:
+  web:
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3000:3000"
+    volumes:
+      - /app/node_modules
+      - .:/app
+```
+
+#### Multi-step builds
+
+```dockerfile
+# Dockerfile (production, multi-step build)
+FROM node:alpine as builder
+WORKDIR '/app'
+COPY package.json .
+RUN npm install
+COPY . .
+RUN npm run build
+
+FROM nginx
+COPY --from=builder /app/build /usr/share/nginx/html
+```
+
+
+
+
+
+
+
+
+
+
+
